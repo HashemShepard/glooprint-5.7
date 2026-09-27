@@ -70,13 +70,25 @@ bool FMaterialFactoryOwnershipTest::RunTest(const FString& Parameters)
     const auto Panel = SNew(SGraphPanel).GraphObj(Fixture.Graph).IsEditable(true);
     const auto Window = SNew(SWindow).ClientSize(FVector2f(800, 600))[Panel];
     FSlateApplication::Get().AddWindow(Window);
+    // Stands in for a Material Editor tab the user already has open.
+    FMaterialFixture OpenFixture;
+    const auto OpenPanel = SNew(SGraphPanel).GraphObj(OpenFixture.Graph).IsEditable(true);
+    const auto OpenWindow = SNew(SWindow).ClientSize(FVector2f(800, 600))[OpenPanel];
+    FSlateApplication::Get().AddWindow(OpenWindow);
+    const auto OpenFactory = MakeShared<FGraphNodeFactory>();
+    OpenPanel->SetNodeFactory(OpenFactory);
+    const int32 OpenReferences = OpenFactory.GetSharedReferenceCount();
     const auto Owner = MakeShared<FWireDrawing>();
-    Owner->InitializeMaterialPanels();
+    // Scan only the fixture window. Discovery over every window would take
+    // over open Material Editor panels, and Shutdown would reset them.
+    Owner->AttachMaterialPanels(Window);
     const auto Foreign = MakeShared<FGraphNodeFactory>();
     Panel->SetNodeFactory(Foreign);
     const int32 References = Foreign.GetSharedReferenceCount();
     Owner->Shutdown();
     TestEqual(TEXT("Shutdown retains a subsequently installed external factory"), Foreign.GetSharedReferenceCount(), References);
+    TestEqual(TEXT("Panels outside the fixture keep their factory"), OpenFactory.GetSharedReferenceCount(), OpenReferences);
+    FSlateApplication::Get().RequestDestroyWindow(OpenWindow);
     FSlateApplication::Get().RequestDestroyWindow(Window);
     return true;
 }

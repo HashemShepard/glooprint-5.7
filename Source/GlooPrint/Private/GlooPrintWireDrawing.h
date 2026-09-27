@@ -85,6 +85,7 @@ class FWireDrawing final : public FGraphPanelPinConnectionFactory
 public:
     FWireDrawing();
     void InitializeMaterialPanels();
+    void AttachMaterialPanels(const TSharedRef<SWidget>& Root);
     virtual FConnectionDrawingPolicy* CreateConnectionPolicy(const UEdGraphSchema* Schema,
         int32 BackLayer, int32 FrontLayer, float Zoom, const FSlateRect& Clip,
         FSlateWindowElementList& Elements, UEdGraph* Graph) const override;
@@ -93,7 +94,6 @@ public:
     void OnSettingsChanged();
 
 private:
-    void AttachMaterialPanels(const TSharedRef<SWidget>& Root);
     void DiscoverMaterialPanels(float DeltaTime);
     struct FMaterialPanelRegistration
     {
